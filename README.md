@@ -1,201 +1,180 @@
-# 🧠 NeuroGuardian AI Agent
+🧠 NeuroGuardian AI Agent
 
-AI-powered cognitive assistant designed to support individuals living with **Alzheimer’s, dementia, Parkinson’s tremor, and other neurological conditions**.
+AI-powered cognitive assistance companion designed to support elderly users and individuals experiencing memory loss, confusion, stress, or neurological conditions.
 
-NeuroGuardian uses **multimodal AI (vision + voice + environment analysis)** to monitor the user's surroundings, provide reminders, detect unusual motion patterns, and assist with daily activities.
+NeuroGuardian combines computer vision, voice interaction, and multimodal AI reasoning to observe surroundings, understand context, and assist users in real time.
 
----
+🌐 Live Demo
+Frontend (Firebase Hosting)
+https://armour-assistant.web.app
+Backend API (Google Cloud Run)
+https://neuroguardian-backend-1024847090973.us-central1.run.app
+🚩 Problem
 
-# 🚩 Problem
+Over 55 million people worldwide live with dementia or cognitive decline, and millions more experience:
 
-Over **55 million people worldwide live with dementia**, and many struggle with:
+memory lapses
 
-* remembering medication schedules
-* recognizing daily tasks
-* interacting with digital interfaces
-* unnoticed tremors or unusual behavior
-* lack of immediate caregiver support
+medication confusion
 
-Existing tools focus on **static reminders**, but they rarely understand the **user’s environment or behavior in real time**.
+emotional distress
 
----
+tremors
 
-# 💡 Solution
+difficulty navigating digital tools
 
-NeuroGuardian acts as a **real-time AI companion** that observes the user’s environment, understands context, and provides assistance.
+lack of immediate caregiver support
 
-The system combines:
+Most digital tools rely on static reminders, but they do not understand a user's environment or behavior in real time.
 
-* **Camera-based environment awareness**
-* **Voice interaction**
-* **AI reasoning using Gemini**
-* **Motion pattern detection**
-* **Caregiver alerting**
+💡 Solution
 
----
+NeuroGuardian acts as a real-time AI companion that observes the user's environment, understands context, and offers assistance.
 
-# ✨ Key Features
+The system integrates:
 
-## 📷 Environment Awareness
+📷 camera-based environmental awareness
 
-NeuroGuardian continuously analyzes camera input to understand the user’s surroundings.
+🗣 voice interaction
+
+🤖 Gemini multimodal reasoning
+
+📊 behavior monitoring
+
+👨‍⚕️ caregiver assistance simulation
+
+✨ Key Features
+📷 AI Vision Monitoring
+
+The system captures frames from the user’s environment and performs multimodal analysis using Gemini.
+
+Example insight:
+
+Glasses detected on nearby table
+→ Suggest user check table
+
+The vision pipeline uses temporal observation windows to analyze frames over time instead of individual snapshots.
+
+🗣 Voice Interaction
+
+Users can speak naturally to NeuroGuardian.
 
 Example:
 
-```
-Medication bottle detected on table
-→ Suggest taking medication
-```
+User: Where are my glasses?
+NeuroGuardian: Your glasses were last seen near the bedside table.
 
----
+Voice processing uses:
 
-## 🗣 Voice Assistant
+Browser SpeechRecognition API
 
-Users can interact naturally:
+Gemini reasoning
 
-```
-User: What should I do next?
-NeuroGuardian: Your next medication is scheduled at 7 PM.
-```
+Spoken responses via SpeechSynthesis
 
-Speech recognition runs in the browser and sends transcripts to the AI backend.
+🧠 Context Awareness
 
----
+The AI evaluates:
 
-## 💊 Medication Reminder Dashboard
+confusion behavior
 
-The system can interpret a care dashboard UI and suggest actions.
+searching patterns
 
-Example dashboard:
+emotional distress
 
-```
-Next Medication: 7:00 PM
-Take Medication
-Call Caregiver
-Log Activity
-```
+environmental cues
 
-AI response:
+Example AI output:
 
-```json
 {
- "analysis": "The dashboard shows medication scheduled at 7 PM.",
+ "analysis": "User appears to be searching for glasses.",
  "actions": {
-   "action": "remind",
-   "target": "Take Medication button"
- }
+   "action": "assist_search",
+   "target": "glasses"
+ },
+ "response": "Your glasses were last seen near the bedside table."
 }
-```
+⚠ Motion / Tremor Detection
 
----
+NeuroGuardian compares consecutive frames to detect unusual movement patterns.
 
-## ⚠ Tremor Detection
+Example:
 
-NeuroGuardian compares consecutive camera frames to detect **repetitive motion patterns** that may resemble tremor.
-
-Example alert:
-
-```
 ⚠ Possible tremor detected
-Caregiver notified
-```
+Caregiver alert suggested
+🧾 Dashboard Understanding
 
----
+The AI can analyze UI screenshots to understand medication reminders or care dashboards.
 
-## 👨‍⚕️ Caregiver Alert Simulation
+Example:
 
-If unusual behavior is detected, the system can trigger alerts.
+Next Medication: 7 PM
+→ AI recommends medication reminder
+🏗 System Architecture
+☁ Cloud Infrastructure
 
-Example API call:
+The application runs entirely on Google Cloud serverless infrastructure.
 
-```
-POST /caregiver-alert
-```
+Component	Service
+Frontend Hosting	Firebase Hosting
+Backend API	Google Cloud Run
+AI Models	Vertex AI Gemini
+Container Registry	Artifact Registry
+CI/CD Builds	Cloud Build
+Logging	Cloud Logging
+⚙ Tech Stack
+Frontend
 
----
+React
 
-# 🏗 System Architecture
+Vite
 
-```mermaid
-flowchart TD
+Web Speech API
 
-User[User / Patient]
+HTML5 Camera API
 
-User -->|Camera| Camera
-User -->|Voice| Voice
-User -->|UI Interaction| Dashboard
+html2canvas
 
-Camera --> React
-Voice --> React
-Dashboard --> React
+Backend
 
-React[React Frontend]
+Python
 
-React -->|POST /chat| FastAPI
+FastAPI
 
-FastAPI[FastAPI Backend]
+REST API
 
-FastAPI --> Gemini
+AI
 
-Gemini[Gemini Multimodal AI<br>Vertex AI]
+Google Vertex AI
 
-Gemini --> FastAPI
+Gemini 2.5 Flash
 
-FastAPI --> React
+Multimodal reasoning
 
-React --> ActionPanel
+Cloud
 
-Camera --> TremorDetection
-TremorDetection --> CaregiverAlert
-CaregiverAlert --> Caregiver
-```
+Google Cloud Run
 
----
+Firebase Hosting
 
-# ⚙ Tech Stack
+Artifact Registry
 
-### Frontend
+Cloud Build
 
-* React
-* Web Speech API
-* HTML5 Camera API
-* html2canvas
-
-### Backend
-
-* Python
-* FastAPI
-* REST API
-
-### AI
-
-* Google Vertex AI
-* Gemini 2.5 Flash
-* Multimodal reasoning
-
----
-
-# 🔄 Data Flow
-
-### Environment Monitoring
-
-```
-Camera Frame
+🔄 Data Flow
+AI Vision Pipeline
+Camera frames
      ↓
-React VideoInput
+VideoInput (React)
+     ↓
+Frame buffer (10s observation window)
      ↓
 POST /chat
      ↓
-Gemini Vision Analysis
+Gemini vision reasoning
      ↓
 AI Guidance Panel
-```
-
----
-
-### Voice Interaction
-
-```
+Voice Interaction
 Speech Input
      ↓
 Browser SpeechRecognition
@@ -204,142 +183,112 @@ Transcript
      ↓
 POST /chat
      ↓
-Gemini Reasoning
+Gemini reasoning
      ↓
-Response displayed in UI
-```
-
----
-
-### Tremor Detection
-
-```
-Video Frame
+Voice response
+Memory Assistance
+Object detected
      ↓
-Frame Comparison
+Stored in memory
      ↓
-Motion Threshold Exceeded
+User asks:
+"Where are my glasses?"
      ↓
-Caregiver Alert
-```
-
----
-
-# 📂 Project Structure
-
-```
-neuroguardian-ai-agent/
+Memory lookup
+     ↓
+AI response
+📂 Project Structure
+neuroguardian-ai-agent
 │
-├── frontend/
-│   ├── src/
+├── frontend
+│   ├── src
 │   │   ├── App.jsx
-│   │   ├── components/
+│   │   ├── components
 │   │   │   ├── VideoInput.jsx
 │   │   │   ├── ScreenCapture.jsx
 │   │   │   ├── VoiceChat.jsx
 │   │   │   └── CaregiverAlert.jsx
-│   │   └── services/
+│   │   └── services
 │   │       └── apiClient.js
 │
-├── backend/
+├── backend
 │   ├── main.py
-│   ├── routes/
+│   ├── routes
 │   │   ├── agent_routes.py
 │   │   └── alert_routes.py
-│   └── services/
-│       └── gemini_live_service.py
+│   └── services
+│       ├── gemini_live_service.py
+│       ├── emotion_service.py
+│       └── memory_agent.py
+│
+├── deployment
+│   └── backend
+│       └── cloudbuild.yaml
 │
 └── README.md
-```
+🚀 Running Locally
+Backend
+uvicorn backend.main:app --reload
 
----
+API runs at:
 
-# 🚀 Running the Project
-
-### Backend
-
-```bash
-uv run uvicorn backend.main:app --reload
-```
-
-Backend runs at:
-
-```
-http://127.0.0.1:8000
-```
-
----
-
-### Frontend
-
-```bash
+http://localhost:8000
+Frontend
 cd frontend
 npm install
 npm run dev
-```
 
 Open:
 
-```
 http://localhost:5173
-```
+☁ Deployment
+Backend Deployment
+gcloud builds submit --config deployment/backend/cloudbuild.yaml
+gcloud run deploy neuroguardian-backend
+Frontend Deployment
+npm run build
+firebase deploy
+🎬 Example Demo Flow
 
----
+1️⃣ AI observes environment
+2️⃣ Frames analyzed by Gemini
+3️⃣ User asks question via voice
+4️⃣ AI suggests action
 
-# 🎬 Demo Scenario
+Example output:
 
-Example demo flow:
-
-1️⃣ Camera observes medication bottle
-2️⃣ AI recognizes medication context
-3️⃣ Dashboard screenshot analyzed
-4️⃣ Voice command issued
-5️⃣ Tremor detection triggered
-
-Result:
-
-```
 AI Insight
-Medication reminder detected
+User appears to be searching for glasses
 
 Suggested Assistance
-Take medication now
-```
+Check bedside table
+📈 Future Improvements
 
----
+Planned upgrades:
 
-# 📈 Future Improvements
+real-time Gemini live video analysis
 
-Planned enhancements:
+multi-frame behavioral detection
 
-* real-time Gemini Live monitoring
-* voice responses from the AI assistant
-* Firestore-based patient memory timeline
-* caregiver mobile dashboard
-* mobile app deployment
+caregiver dashboard
 
----
+Firestore patient memory timeline
 
-# 🌍 Vision
+mobile deployment
 
-NeuroGuardian aims to evolve into a **real-time cognitive companion** that helps patients maintain independence while supporting caregivers with intelligent insights.
+🌍 Vision
 
----
+NeuroGuardian aims to become a real-time cognitive companion that helps individuals maintain independence while assisting caregivers with intelligent insights.
 
-# 👥 Contributors
+👥 Contributors
 
 Built with ❤️ for assistive healthcare innovation.
 
----
-
-# 📜 License
+📜 License
 
 MIT License
 
----
+⭐ Support the Project
 
-# ⭐ Support the Project
-
-If you like this project, consider giving it a ⭐ on GitHub.
-
+If you like this project, please consider giving it a ⭐ on GitHub.
 
