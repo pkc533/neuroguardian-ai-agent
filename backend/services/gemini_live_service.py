@@ -1,20 +1,36 @@
 import base64
 import json
 import re
+import os
 import vertexai
+
 from vertexai.generative_models import GenerativeModel, Part
 
-vertexai.init()
+PROJECT_ID = os.getenv("GOOGLE_CLOUD_PROJECT", "armour-assistant")
+REGION = "us-central1"
+
+vertexai.init(
+    project=PROJECT_ID,
+    location=REGION
+)
 
 model = GenerativeModel("gemini-2.5-flash")
 
 
-def clean_json_response(text):
-    """
-    Remove markdown formatting and safely parse JSON.
-    """
+# --------------------------------------------------
+# Safe JSON Cleaner
+# --------------------------------------------------
 
-    # Remove ```json ``` blocks
+def clean_json_response(text):
+
+    if not text:
+        return {
+            "analysis": "No response from AI.",
+            "actions": {"action": "observe", "target": "environment"},
+            "response": None
+        }
+
+    # remove markdown
     text = re.sub(r"```json", "", text)
     text = re.sub(r"```", "", text)
 
@@ -23,12 +39,19 @@ def clean_json_response(text):
     try:
         parsed = json.loads(text)
         return parsed
-    except:
+
+    except Exception:
+
         return {
             "analysis": text,
-            "actions": None
+            "actions": {"action": "observe", "target": "environment"},
+            "response": None
         }
 
+
+# --------------------------------------------------
+# Emotion Analysis
+# --------------------------------------------------
 
 def analyze_emotion_with_gemini(emotion_data):
 
@@ -48,37 +71,66 @@ Determine emotional state:
 If stress or sadness is detected, generate a calming message.
 
 Return JSON:
-
 {{
- "analysis": "emotion explanation",
+ "analysis": "",
  "actions": {{
    "action": "calm",
    "target": "emotional support"
  }},
- "response": "calming therapy message"
+ "response": ""
 }}
 """
 
-    response = model.generate_content(prompt)
+    try:
 
-    return clean_json_response(response.text)
+        response = model.generate_content(prompt)
 
+        return clean_json_response(response.text)
+
+    except Exception as e:
+
+        print("Gemini emotion error:", str(e))
+
+        return {
+            "analysis": "Emotion analysis unavailable.",
+            "actions": {"action": "observe", "target": "emotion"},
+            "response": None
+        }
+
+
+# --------------------------------------------------
+# Multimodal Analysis
+# --------------------------------------------------
 
 def analyze_multimodal(prompt, image=None):
 
-    if image:
-        image_bytes = base64.b64decode(image.split(",")[1])
+    try:
 
-        image_part = Part.from_data(
-            image_bytes,
-            mime_type="image/jpeg"
-        )
+        if image:
 
-        response = model.generate_content(
-            [prompt, image_part]
-        )
+            image_bytes = base64.b64decode(image.split(",")[1])
 
-    else:
-        response = model.generate_content(prompt)
+            image_part = Part.from_data(
+                image_bytes,
+                mime_type="image/jpeg"
+            )
 
-    return clean_json_response(response.text)
+            response = model.generate_content(
+                [prompt, image_part]
+            )
+
+        else:
+
+            response = model.generate_content(prompt)
+
+        return clean_json_response(response.text)
+
+    except Exception as e:
+
+        print("Gemini multimodal error:", str(e))
+
+        return {
+            "analysis": "AI analysis temporarily unavailable.",
+            "actions": {"action": "observe", "target": "environment"},
+            "response": None
+        }

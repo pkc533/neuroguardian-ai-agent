@@ -1,0 +1,14 @@
+{
+  "mary": {
+    "relationship": "daughter",
+    "name": "Priyanka",
+    "voice_style": "warm female voice",
+    "greeting": "Hi mom, it's Priya."
+  },
+  "john": {
+    "relationship": "son",
+    "name": "Shekhar",
+    "voice_style": "calm male voice",
+    "greeting": "Hey dad, it's Rahul."
+  }
+}

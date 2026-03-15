@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import logging
 
@@ -7,7 +8,7 @@ from backend.routes.agent_routes import router as agent_router
 from backend.routes.alert_routes import router as alert_router
 from backend.routes.emotion_routes import router as emotion_router
 from backend.routes.story_routes import router as story_router
-
+from backend.routes.family_voice_routes import router as family_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("neuroguardian")
@@ -26,7 +27,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS (for React frontend)
+# --------------------------------------------------
+# CORS (CRITICAL FIX)
+# --------------------------------------------------
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -35,15 +39,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register routes
+# --------------------------------------------------
+# GLOBAL ERROR HANDLER
+# --------------------------------------------------
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+
+    print("GLOBAL ERROR:", str(exc))
+
+    return JSONResponse(
+        status_code=200,
+        content={
+            "analysis": "Backend error handled safely.",
+            "actions": {"action": "observe", "target": "environment"},
+            "response": None
+        },
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
+
+
+# --------------------------------------------------
+# ROUTES
+# --------------------------------------------------
+
 app.include_router(agent_router)
 app.include_router(alert_router)
 app.include_router(emotion_router)
 app.include_router(story_router)
+app.include_router(family_router)
+
 
 @app.get("/")
 def health():
-    return {
-        "status": "running",
-        "service": "NeuroGuardian AI backend"
-    }
+    return {"status": "running", "service": "NeuroGuardian AI backend"}

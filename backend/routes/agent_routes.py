@@ -1,131 +1,221 @@
-from fastapi import APIRouter
-from pydantic import BaseModel
+from fastapi import APIRouter, Request
+from fastapi.responses import JSONResponse
+import time
 
 from backend.services.gemini_live_service import analyze_multimodal
 from backend.services.emotion_service import detect_emotional_state
 from backend.services.persona_service import calming_response
+from backend.services import memory_agent
 
 router = APIRouter()
 
+LAST_VISION_ANALYSIS = 0
+VISION_WINDOW_SECONDS = 10
 
-class AgentRequest(BaseModel):
-    prompt: str | None = None
-    image: str | None = None
+
+def safe_response(data):
+    """Always return JSON with CORS header"""
+    return JSONResponse(
+        content=data,
+        headers={"Access-Control-Allow-Origin": "*"}
+    )
+
+
+def normalize_result(result):
+    """Ensure Gemini response is always valid JSON"""
+
+    if result is None:
+        return {
+            "analysis": "No AI response available.",
+            "actions": {"action": "observe", "target": "environment"},
+            "response": None
+        }
+
+    if not isinstance(result, dict):
+        return {
+            "analysis": str(result),
+            "actions": {"action": "observe", "target": "environment"},
+            "response": None
+        }
+
+    result.setdefault("analysis", "Environment observed.")
+    result.setdefault("actions", {"action": "observe", "target": "environment"})
+    result.setdefault("response", None)
+
+    return result
 
 
 @router.post("/chat")
-async def chat(req: AgentRequest):
+async def chat(request: Request):
 
-    prompt = req.prompt or ""
+    global LAST_VISION_ANALYSIS
 
-    # Base NeuroGuardian instruction
-    system_prompt = """
-You are NeuroGuardian, an AI companion assisting people with
-Alzheimer's, dementia, Parkinson's disease and emotional stress.
+    try:
+        body = await request.json()
+    except Exception as e:
 
-You help with:
-- medication reminders
-- environment awareness
-- detecting unusual movement (tremor)
-- guiding the user with simple instructions
-- calming users experiencing stress or anxiety
-- suggesting contacting caregivers if needed
+        print("JSON parse error:", str(e))
 
-Always respond clearly, simply and supportively.
+        return safe_response({
+            "analysis": "Invalid request format.",
+            "actions": {"action": "observe", "target": "environment"},
+            "response": None
+        })
+
+    print("\n===== REQUEST =====")
+    print(body)
+    print("===================\n")
+
+    prompt = body.get("prompt")
+    frames = body.get("frames")
+
+    # --------------------------------------------------
+    # VISION ANALYSIS
+    # --------------------------------------------------
+
+    if frames and isinstance(frames, list):
+
+        now = time.time()
+
+        if now - LAST_VISION_ANALYSIS < VISION_WINDOW_SECONDS:
+
+            return safe_response({
+                "analysis": "Observation window active",
+                "actions": {"action": "observe", "target": "environment"},
+                "response": None
+            })
+
+        LAST_VISION_ANALYSIS = now
+
+        frame = frames[0]
+
+        vision_prompt = """
+You are NeuroGuardian, an AI assistant supporting elderly users.
+
+Analyze the image and determine:
+
+• confusion
+• searching behaviour
+• emotional distress
+• visible objects (glasses, keys, phone, medication)
+
+Return JSON with:
+
+analysis
+situation
+object
+location
+actions
+response
 """
 
-    # ------------------------------------------------
-    # IMAGE INPUT → ENVIRONMENT ANALYSIS
-    # ------------------------------------------------
+        try:
 
-    if req.image:
+            raw_result = analyze_multimodal(vision_prompt, frame)
 
-        vision_prompt = system_prompt + """
-Analyze the user's environment from the camera image.
+            print("Gemini result:", raw_result)
 
-Look for:
-- medication
-- hazards
-- signs of distress
-- unusual activity
+            result = normalize_result(raw_result)
 
-Return ONLY valid JSON:
+        except Exception as e:
 
-{
- "analysis": "short explanation of what you observe",
- "actions": {
-   "action": "remind | notify | guide | calm",
-   "target": "recommended assistance"
- }
-}
+            print("Vision analysis error:", str(e))
 
-Do not include markdown formatting.
-"""
+            return safe_response({
+                "analysis": "Vision analysis failed.",
+                "actions": {"action": "observe", "target": "environment"},
+                "response": None
+            })
 
-        result = analyze_multimodal(vision_prompt, req.image)
+        # --------------------------------------------------
+        # SAFE MEMORY STORAGE
+        # --------------------------------------------------
 
-        return result
+        obj = result.get("object")
+        location = result.get("location")
 
-    # ------------------------------------------------
-    # VOICE INPUT → EMOTION ANALYSIS
-    # ------------------------------------------------
+        if obj and location:
+
+            print("Saving memory:", obj, location)
+
+            if hasattr(memory_agent, "store_object_location"):
+                memory_agent.store_object_location(obj, location)
+            else:
+                print("store_object_location not available")
+
+        return safe_response(result)
+
+    # --------------------------------------------------
+    # VOICE ANALYSIS
+    # --------------------------------------------------
 
     if prompt:
 
+        lower_prompt = prompt.lower()
+
+        for obj in ["keys", "glasses", "phone", "medication"]:
+
+            if obj in lower_prompt and any(
+                w in lower_prompt for w in ["where", "find", "lost", "looking"]
+            ):
+
+                location = None
+
+                if hasattr(memory_agent, "get_object_location"):
+                    location = memory_agent.get_object_location(obj)
+
+                if location:
+
+                    return safe_response({
+                        "analysis": f"User searching for {obj}.",
+                        "actions": {
+                            "action": "assist_search",
+                            "target": obj
+                        },
+                        "response": f"Your {obj} were last seen near the {location}."
+                    })
+
         emotion = detect_emotional_state(prompt)
 
-        # Stress or sadness detected → calming persona
         if emotion in ["stress", "sadness"]:
 
             calming_text = calming_response(prompt)
 
-            return {
-                "analysis": "User appears stressed or emotionally overwhelmed.",
+            return safe_response({
+                "analysis": "User appears stressed or overwhelmed.",
                 "actions": {
                     "action": "calm",
                     "target": "emotional support"
                 },
                 "response": calming_text
-            }
+            })
 
-        # Fear detected → caregiver escalation
-        if emotion == "fear":
-
-            return {
-                "analysis": "User appears frightened or unsafe.",
-                "actions": {
-                    "action": "notify",
-                    "target": "caregiver"
-                }
-            }
-
-        # Normal conversation → Gemini reasoning
-        voice_prompt = system_prompt + f"""
-
+        voice_prompt = f"""
 User said: "{prompt}"
 
-Return JSON:
-
-{
- "analysis": "short helpful response",
- "actions": {
-   "action": "guide | calm | remind",
-   "target": "recommended assistance"
- }
-}
-
-Do not include markdown formatting.
+Return JSON with analysis, actions and response.
 """
 
-        result = analyze_multimodal(voice_prompt, None)
+        try:
 
-        return result
+            raw_result = analyze_multimodal(voice_prompt, None)
 
-    # ------------------------------------------------
-    # FALLBACK
-    # ------------------------------------------------
+            result = normalize_result(raw_result)
 
-    return {
+        except Exception as e:
+
+            print("Voice analysis error:", str(e))
+
+            return safe_response({
+                "analysis": "Voice analysis failed.",
+                "actions": {"action": "observe", "target": "conversation"},
+                "response": None
+            })
+
+        return safe_response(result)
+
+    return safe_response({
         "analysis": "No input received.",
-        "actions": None
-    }
+        "actions": {"action": "observe", "target": "environment"},
+        "response": None
+    })

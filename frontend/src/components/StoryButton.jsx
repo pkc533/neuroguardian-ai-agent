@@ -4,7 +4,7 @@ export default function StoryButton() {
 
   const tellStory = async () => {
 
-    const response = await fetch("http://127.0.0.1:8000/story", {
+    const response = await fetch("https://neuroguardian-backend-1024847090973.us-central1.run.app/story", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"

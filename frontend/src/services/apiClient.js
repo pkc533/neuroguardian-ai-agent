@@ -1,8 +1,27 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://127.0.0.1:8000"
+  baseURL: "https://neuroguardian-backend-1024847090973.us-central1.run.app"
 });
+
+
+// --------------------------------------------------
+// ENVIRONMENT / CAMERA ANALYSIS
+// --------------------------------------------------
+
+export async function analyzeEnvironment(image) {
+
+  const res = await API.post("/chat", {
+    image
+  });
+
+  return res.data;
+}
+
+
+// --------------------------------------------------
+// DASHBOARD SCREENSHOT ANALYSIS (existing)
+// --------------------------------------------------
 
 export async function sendScreenshot(image, prompt) {
 
