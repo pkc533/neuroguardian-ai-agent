@@ -8,6 +8,7 @@ export default function VideoInput({ onCapture }) {
   const [cameraReady, setCameraReady] = useState(false);
   const [lastFrame, setLastFrame] = useState(null);
   const [autoMode, setAutoMode] = useState(false);
+  const [emotionInsight, setEmotionInsight] = useState(null);
 
   useEffect(() => {
 
@@ -24,8 +25,11 @@ export default function VideoInput({ onCapture }) {
         setCameraReady(true);
 
       } catch (err) {
+
         console.error("Camera error:", err);
+
       }
+
     }
 
     startCamera();
@@ -39,8 +43,10 @@ export default function VideoInput({ onCapture }) {
     if (autoMode) {
 
       interval = setInterval(() => {
+
         captureCameraFrame();
-      }, 4000); // analyze every 4 seconds
+
+      }, 4000);
 
     }
 
@@ -48,7 +54,7 @@ export default function VideoInput({ onCapture }) {
 
   }, [autoMode]);
 
-  const captureCameraFrame = () => {
+  const captureCameraFrame = async () => {
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -66,8 +72,46 @@ export default function VideoInput({ onCapture }) {
 
     setLastFrame(image);
 
+    // Send frame for environment reasoning
     if (onCapture) {
       onCapture(image);
+    }
+
+    // Send frame for emotion detection
+    try {
+
+      const response = await fetch("http://127.0.0.1:8000/emotion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          image: image
+        })
+      });
+
+      const data = await response.json();
+
+      console.log("Emotion insight:", data);
+
+      setEmotionInsight(data.response);
+
+      // voice calming playback if needed
+      if (data.response) {
+
+        const speech = new SpeechSynthesisUtterance(data.response);
+
+        speech.rate = 0.9;
+        speech.pitch = 0.9;
+
+        speechSynthesis.speak(speech);
+
+      }
+
+    } catch (err) {
+
+      console.error("Emotion detection failed:", err);
+
     }
 
   };
@@ -131,6 +175,19 @@ export default function VideoInput({ onCapture }) {
               border: "1px solid #ddd"
             }}
           />
+        </div>
+      )}
+
+      {emotionInsight && (
+        <div
+          style={{
+            marginTop: 15,
+            padding: 10,
+            background: "#eafaf1",
+            borderRadius: 6
+          }}
+        >
+          <b>Emotional Insight:</b> {emotionInsight}
         </div>
       )}
 

@@ -5,12 +5,14 @@ import VideoInput from "./components/VideoInput";
 import VoiceChat from "./components/VoiceChat";
 import CaregiverAlert from "./components/CaregiverAlert";
 import { sendScreenshot } from "./services/apiClient";
+import StoryButton from "./components/StoryButton";
 
 export default function App() {
 
   const [actions, setActions] = useState(null);
   const [analysis, setAnalysis] = useState(null);
   const [tremorDetected, setTremorDetected] = useState(false);
+  const [visionEnabled, setVisionEnabled] = useState(true);
 
   const neuroPrompt = `
 You are NeuroGuardian.
@@ -28,8 +30,9 @@ Examples:
 Return JSON with analysis and recommended action.
 `;
 
-  // Screenshot / camera analysis
   const handleCapture = async (image) => {
+
+    if (!visionEnabled) return;
 
     const response = await sendScreenshot(image, neuroPrompt);
 
@@ -37,13 +40,26 @@ Return JSON with analysis and recommended action.
     setAnalysis(response.analysis);
   };
 
-  // Voice assistant response handler
   const handleVoiceResult = (response) => {
 
     if (!response) return;
 
     setActions(response.actions);
     setAnalysis(response.analysis);
+  };
+
+  const toggleVision = () => {
+
+    const nextState = !visionEnabled;
+
+    setVisionEnabled(nextState);
+
+    if (!nextState) {
+      setAnalysis(null);
+      setActions(null);
+      speechSynthesis.cancel();
+    }
+
   };
 
   return (
@@ -56,13 +72,10 @@ Return JSON with analysis and recommended action.
       }}
     >
 
-      <h1>🧠 NeuroGuardian AI Companion</h1>
+      <h1>🧠 NeuroGuardian</h1>
 
       <p style={{ maxWidth: 700 }}>
-        NeuroGuardian is an AI companion designed to support people living with
-        Alzheimer’s, dementia, and other cognitive challenges. It continuously
-        observes the environment, reminds users about important tasks, and
-        provides real-time guidance to maintain independence and safety.
+        Smart assistance for daily safety, emotional comfort, and independence.
       </p>
 
       <hr />
@@ -76,8 +89,6 @@ Return JSON with analysis and recommended action.
         }}
       >
 
-        {/* CAMERA MONITOR */}
-
         <div
           style={{
             flex: 1,
@@ -90,19 +101,49 @@ Return JSON with analysis and recommended action.
 
           <h2>Environment Monitor</h2>
 
+          <div style={{ marginBottom: 12 }}>
+
+            <span
+              style={{
+                padding: "6px 10px",
+                borderRadius: 6,
+                background: visionEnabled ? "#e8f7ef" : "#fbeaea",
+                color: visionEnabled ? "#27ae60" : "#c0392b",
+                fontSize: 13,
+                marginRight: 10
+              }}
+            >
+              🤖 AI Monitoring {visionEnabled ? "Active" : "Paused"}
+            </span>
+
+            <button
+              onClick={toggleVision}
+              style={{
+                padding: "6px 12px",
+                background: visionEnabled ? "#27ae60" : "#e74c3c",
+                color: "white",
+                border: "none",
+                borderRadius: 6,
+                cursor: "pointer"
+              }}
+            >
+              {visionEnabled ? "Disable AI Vision" : "Enable AI Vision"}
+            </button>
+
+          </div>
+
           <VideoInput
             onCapture={handleCapture}
             onTremor={setTremorDetected}
+            visionEnabled={visionEnabled}
           />
 
           <p style={{ fontSize: 12, color: "#777" }}>
             NeuroGuardian observes surroundings to detect medication,
-            potential hazards, or unusual movement patterns.
+            hazards, or unusual movement patterns.
           </p>
 
         </div>
-
-        {/* CARE DASHBOARD */}
 
         <div
           style={{
@@ -127,8 +168,6 @@ Return JSON with analysis and recommended action.
 
       </div>
 
-      {/* VOICE ASSISTANT */}
-
       <div
         style={{
           marginTop: 40,
@@ -142,17 +181,21 @@ Return JSON with analysis and recommended action.
 
         <VoiceChat onVoiceResult={handleVoiceResult} />
 
+        <div style={{ marginTop: 20 }}>
+          <StoryButton />
+        </div>
+
         <p style={{ fontSize: 12, color: "#777" }}>
           Ask NeuroGuardian questions like:
           <br />
           “What should I do next?”
           <br />
           “Is it time for my medication?”
+          <br />
+          Or press "Tell Me a Story" to relax.
         </p>
 
       </div>
-
-      {/* AI OUTPUT */}
 
       <div
         style={{
@@ -168,11 +211,10 @@ Return JSON with analysis and recommended action.
         <ActionPanel
           actions={actions}
           analysis={analysis}
+          visionEnabled={visionEnabled}
         />
 
       </div>
-
-      {/* CAREGIVER ALERT */}
 
       <CaregiverAlert tremor={tremorDetected} />
 

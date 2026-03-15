@@ -7,11 +7,17 @@ export default function ScreenCapture({ onCapture }) {
 
   const takeScreenshot = async () => {
 
+    if (!captureRef.current) return;
+
     const canvas = await html2canvas(captureRef.current);
 
     const image = canvas.toDataURL("image/png");
 
-    onCapture(image);
+    console.log("Screenshot captured");
+
+    if (onCapture) {
+      onCapture(image);
+    }
   };
 
   return (
@@ -21,33 +27,78 @@ export default function ScreenCapture({ onCapture }) {
         ref={captureRef}
         style={{
           border: "1px solid #ddd",
-          padding: 20,
-          borderRadius: 10,
+          padding: 25,
+          borderRadius: 12,
           background: "white",
-          width: 350
+          maxWidth: 420
         }}
       >
 
-        <h3>Daily Care Dashboard</h3>
+        <h2 style={{ marginBottom: 10 }}>
+          👋 Hello Friend
+        </h2>
 
-        <p><b>Next Medication:</b> 7:00 PM</p>
+        <p style={{ fontSize: 16 }}>
+          I'm here to help with your daily routine.
+        </p>
 
-        <p><b>Last Activity:</b> Walked 20 minutes</p>
+        <hr />
+
+        <h3 style={{ marginTop: 15 }}>
+          🕒 Next Medication
+        </h3>
+
+        <p style={{ fontSize: 18 }}>
+          <b>7:00 PM</b>
+        </p>
 
         <div style={{ marginTop: 15 }}>
 
-          <button style={{ marginRight: 10 }}>
-            Take Medication
+          <button
+            style={{
+              padding: "12px 16px",
+              marginRight: 10,
+              fontSize: 16,
+              borderRadius: 8
+            }}
+          >
+            💊 Take Medication
           </button>
 
-          <button style={{ marginRight: 10 }}>
-            Call Caregiver
+          <button
+            style={{
+              padding: "12px 16px",
+              marginRight: 10,
+              fontSize: 16,
+              borderRadius: 8
+            }}
+          >
+            📞 Call Caregiver
           </button>
 
-          <button>
-            Log Activity
+          <button
+            style={{
+              padding: "12px 16px",
+              fontSize: 16,
+              borderRadius: 8
+            }}
+          >
+            📋 Log Activity
           </button>
 
+        </div>
+
+        <div
+          style={{
+            marginTop: 20,
+            padding: 12,
+            background: "#eef6ff",
+            borderRadius: 8
+          }}
+        >
+          🤖 NeuroGuardian Suggestion  
+          <br />
+          It might be time to prepare your evening medication.
         </div>
 
       </div>
@@ -55,16 +106,16 @@ export default function ScreenCapture({ onCapture }) {
       <button
         onClick={takeScreenshot}
         style={{
-          marginTop: 10,
-          padding: "8px 12px",
-          background: "#4CAF50",
+          marginTop: 12,
+          padding: "10px 18px",
+          background: "#2e86de",
           color: "white",
           border: "none",
           borderRadius: 6,
-          cursor: "pointer"
+          fontSize: 16
         }}
       >
-        Capture Screen
+        Analyze Dashboard
       </button>
 
     </div>

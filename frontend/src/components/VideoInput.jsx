@@ -1,22 +1,32 @@
 import React, { useEffect, useRef, useState } from "react";
 
-export default function VideoInput({ onCapture, onTremor }) {
+export default function VideoInput({ onCapture, onTremor, visionEnabled }) {
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
-
-  const [prevFrame, setPrevFrame] = useState(null);
+  const prevFrameRef = useRef(null);
 
   useEffect(() => {
 
     async function startCamera() {
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: false
-      });
+      try {
 
-      videoRef.current.srcObject = stream;
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+
+      } catch (err) {
+
+        console.error("Camera access error:", err);
+
+      }
+
     }
 
     startCamera();
@@ -39,41 +49,47 @@ export default function VideoInput({ onCapture, onTremor }) {
 
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-    if (prevFrame) {
+    if (prevFrameRef.current) {
 
       let motion = 0;
 
       for (let i = 0; i < imageData.data.length; i += 40) {
-        motion += Math.abs(imageData.data[i] - prevFrame.data[i]);
+        motion += Math.abs(imageData.data[i] - prevFrameRef.current.data[i]);
       }
 
-      if (motion > 40000) {
-
+      if (motion > 120000) {
         if (onTremor) onTremor(true);
-
       } else {
-
         if (onTremor) onTremor(false);
       }
+
     }
 
-    setPrevFrame(imageData);
+    prevFrameRef.current = imageData;
 
-    const image = canvas.toDataURL("image/jpeg");
+    if (visionEnabled && onCapture) {
 
-    if (onCapture) onCapture(image);
+      const image = canvas.toDataURL("image/jpeg");
+
+      onCapture(image);
+
+    }
 
   };
 
   useEffect(() => {
 
+    if (!visionEnabled) return;
+
     const interval = setInterval(() => {
+
       analyzeFrame();
+
     }, 3000);
 
     return () => clearInterval(interval);
 
-  }, [prevFrame]);
+  }, [visionEnabled]);
 
   return (
     <div>
@@ -81,6 +97,7 @@ export default function VideoInput({ onCapture, onTremor }) {
       <video
         ref={videoRef}
         autoPlay
+        playsInline
         style={{
           width: "400px",
           borderRadius: "10px",
