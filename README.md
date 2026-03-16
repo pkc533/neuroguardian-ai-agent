@@ -386,6 +386,108 @@ Check bedside table
 ```
 
 ---
+# 🧪 Reproducible Testing & Quick Verification
+
+This project can be reproduced and verified using the following steps.  
+These instructions allow reviewers, developers, or researchers to quickly validate the functionality of NeuroGuardian.
+
+---
+
+## 1️⃣ Test the Live Deployment
+
+The deployed demo can be accessed here:
+
+Frontend:
+https://armour-assistant.web.app
+Backend API:
+https://neuroguardian-backend-1024847090973.us-central1.run.app
+
+Example API test:
+
+```bash
+curl -X POST https://neuroguardian-backend-1024847090973.us-central1.run.app/chat \
+-H "Content-Type: application/json" \
+-d '{"prompt": "I cannot find my glasses"}'
+
+2️⃣ Run the System Locally
+
+Clone the repository:
+git clone https://github.com/your-repo/neuroguardian-ai-agent.git
+cd neuroguardian-ai-agent
+
+Start Backend
+uvicorn backend.main:app --reload
+
+Backend will run at:
+
+http://localhost:8000
+
+Interactive API documentation:
+
+http://localhost:8000/docs
+
+☁ Deployment
+Backend Deployment
+gcloud builds submit --config deployment/backend/cloudbuild.yaml
+gcloud run deploy neuroguardian-backend
+Frontend Deployment
+npm run build
+firebase deploy
+
+
+🎬 Example Demo Flow
+
+1️⃣ AI observes environment
+2️⃣ Frames analyzed by Gemini
+3️⃣ User asks question via voice
+4️⃣ AI suggests action
+
+Result:
+
+AI Insight
+User appears to be searching for glasses
+
+Suggested Assistance
+Check bedside table
+📈 Future Improvements
+
+Planned upgrades:
+
+real-time Gemini live video analysis
+
+multi-frame behavioral detection
+
+caregiver dashboard
+
+Firestore patient memory timeline
+
+mobile deployment
+
+🌍 Vision
+
+NeuroGuardian aims to become a real-time cognitive companion that helps individuals maintain independence while assisting caregivers with intelligent insights.
+
+👥 Contributors
+
+Built with ❤️ for assistive healthcare innovation.
+
+📜 License
+
+MIT License
+
+⭐ Support the Project
+
+If you like this project, please consider giving it a ⭐ on GitHub.
+
+
+---
+
+If you'd like, I can also help you add **two sections that significantly improve AI project READMEs for GitHub and research visibility**:
+
+- **📊 Evaluation & Benchmarking**
+- **🔐 Privacy & Safety for Healthcare AI**
+
+These are often expected in **AI + healthcare projects**.
 
 # 📈 Future Improvements
 
